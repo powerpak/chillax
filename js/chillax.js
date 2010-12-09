@@ -48,7 +48,8 @@
   })($);
   
   
-  /* jFeed : jQuery feed parser plugin
+  /* 
+   * jFeed : jQuery feed parser plugin
    * Copyright (C) 2007 Jean-François Hovinne - http://www.hovinne.com/
    * Dual licensed under the MIT (MIT-license.txt)
    * and GPL (GPL-license.txt) licenses.
@@ -172,13 +173,20 @@
     
   })($);
 
+  // Ok, this is where tpak starts writing some gnarly Javascript.
   // utility for uniquely identifying elements
   $.id = function(elem) {
     return $.data($(elem).get(0));
   };
 
+  /* 
+   * infiniscroll: a widget to show an infinitely looping list of items,
+   * some of which may be changing while offscreen!
+   * See http://docs.jquery.com/UI_Developer_Guide for how $.widget works
+   */
   $.widget('ui.infiniscroll', {
     
+    // Default options that can be overridden
     options: {
       disabled: false,
       marginRows: 100,
@@ -196,6 +204,7 @@
       }
     },
     
+    // Called automatically when widget is instantiated
     _init: function() {
       var $elem = this.element, 
         o = this.options;
@@ -216,6 +225,7 @@
       this.recenter();
     },
     
+    // Binds all DOM-initiated events relevant to this widget
     _bindEvents: function() {
       var self = this,
         $elem = this.element;
@@ -224,6 +234,7 @@
       $(window).bind('resize.infiniscroll', function() { self.redraw(); });
     },
     
+    // Go through this.rows and precalculate how far each one is from the top.
     _calcOffsets: function(skipVisibility) {
       var self = this,
         o = this.options,
@@ -266,12 +277,15 @@
       }
     },
     
+    // Modulo, except always returns a positive number
+    // Just don't pass it two negative numbers :-/
     _positiveMod: function(num, length) {
       if (!length) { return 0; }
       while (num < 0) { num += length; }
       return num % length;
     },
 
+    // A wrapper for creating a new row, basically hands off to the createRow callback
     _createRow: function(item, top) {
       var $row = this.options.createRow(item);
       $row.addClass('infini-row').css({position: 'absolute', height: item.height});
@@ -279,6 +293,8 @@
       return $row;
     },
     
+    // Get new data for offscreen rows using the refreshRows callback and put it into this.rows
+    // force parameter does onscreen rows too.
     _refreshRows: function(force) {
       var self = this,
         o = this.options,
@@ -302,6 +318,7 @@
       }
     },
     
+    // Redraw offscreen rows, or if force parameter is true, all of them.
     redraw: function(force) {
       var self = this,
         $elem = this.element,
@@ -377,7 +394,8 @@
       this._updateSection(scrollTop);
     },
     
-    recenter: function() {
+    // The user has paused in scrolling.  Now is a good time to reset the virtual scroll layer.
+    recenter: function(force) {
       var scrollTop = this.inner.scrollTop(),
         diff = scrollTop - this.virtualY;
       this.realY += diff;
@@ -387,9 +405,10 @@
       });
       this.ignoreNextScroll = true;
       this.inner.scrollTop(this.virtualY);
-      this.redraw();
+      this.redraw(force);
     },
     
+    // This function is highly dangerous.. abandoned
     repositionAfter: function($row, deltaY) {
       var afterTop = parseInt($row.css('top'), 10);
       this.content.children('.infini-row').each(function() {
@@ -398,6 +417,7 @@
       });
     },
     
+    // Internal handler for scroll events
     _scroll: function(event) {
       var self = this,
         o = this.options,
@@ -424,6 +444,7 @@
       this.ignoreNextScroll = false;
     },
     
+    // Update the indicators for the current section that is being viewed
     _updateSection: function(scrollTop) {
       var self = this,
         realOffset = this._positiveMod(this.realY + scrollTop - this.virtualY, this.contentHeight),
@@ -445,23 +466,33 @@
       }
     },
     
+    // Jump to a particular section by section ID
     gotoSection: function(sectionId) {
       var scrollTop = this.inner.scrollTop(),
         section = this.sectionOffsets[sectionId];
-      if (section) { this.inner.scrollTop(section.offset - this.realY + this.virtualY); }
+      if (section) {
+        this.realY = section.offset;
+        this.inner.scrollTop(this.virtualY);
+      }
       clearTimeout(this.recenterTimer);
-      this.recenter();
+      this.recenter(true);
     }
     
   });
 
+  /* 
+   * The ChillaxReader object encompasses all application-level logic.
+   * It is instantiated once to kick off the application onDOMReady.
+   */
   function ChillaxReader(options) {
     var self = this;
     // This is a singleton object, enfore single instance
     if ( arguments.callee._singletonInstance ) { return arguments.callee._singletonInstance; }
     arguments.callee._singletonInstance = this;
   
+    // default options, none of which will be overridden
     var defaults = {
+      // where are all the relevant UI elements?
       els: {
         infiniscroll: '#infini-scroll',
         sources: '#sources',
@@ -476,6 +507,7 @@
         addDialog: '#add-dialog',
         removeDialog: '#remove-dialog'
       },
+      // definitions for the Web SQL tables
       tableDefs: {
         feeds: '(\
           id INTEGER PRIMARY KEY ASC, \
@@ -504,6 +536,7 @@
           UNIQUE (feed_id, link) ON CONFLICT REPLACE\
         )'
       },
+      // if the user has no feeds, start with these
       startFeeds: [
         { 
           label: 'nyt: top pop', 
@@ -514,7 +547,7 @@
           link: 'http://feeds.feedburner.com/newsyc20?format=xml',
           homepage: 'http://news.ycombinator.com/'
         },{ 
-          label: 'googlenews',
+          label: 'news.google',
           link: 'http://news.google.com/news?pz=1&cf=all&ned=us&hl=en&output=rss',
           use_viewtext: false
         },{ 
@@ -535,16 +568,25 @@
           label: 'ars etc',
           link: 'http://feeds.arstechnica.com/arstechnica/etc/',
           homepage: 'http://arstechnica.com'
+        },{
+          label: 'reddit.com',
+          link: 'http://feeds2.feedburner.com/CleanReddit',
+          homepage: 'http://reddit.com'
         }
       ],
+      // predefined heights for items of various types and visibilities
       heights: {
         item: [70, 58, 44, 27],
         item_title : 33,
         header: 25
       },
+      // within the contentFrame, set aside from text any images above this width
       wrapImageWidth: 70,
+      // how often to fetch new RSS
       refreshInterval: 20 * 60 * 1000,
+      // collapse items after clicking on them.  This doesn't work correctly so it's off
       collapseClicked: false,
+      // URLs for APIs and social websites that will be used
       rssProxy: 'http://chillaxapp.com/proxy.php?url=',
       defaultFavicon: 'http://chillaxapp.com/images/rss.png',
       faviconAPI: 'http://getfavicon.appspot.com/',
@@ -557,6 +599,7 @@
     };
     var o = this.options = $.extend({}, defaults, options || {});
 
+    // Create local references to all the UI elements
     var $els = {};
     $.each(o.els, function(index, val) {
       $els[index] = $(val);
@@ -567,15 +610,17 @@
      **/
     $.extend(this, {
       db: null,
-      items: [],
+      items: [],              // the current set of news items to be listed
       itemsById: {},
-      showingItem: null,
-      fetchAllTimeout: null
+      showingItem: null,      // item ID for the article shown in contentFrame
+      fetchAllTimeout: null   // the timer variable for RSS fetching
     });
     
     /**
      * Private functions, database related
      **/
+     
+    // Setup the database.
     function initializeDatastore(forceDrop, success, fail) {
       if (!window.openDatabase) { fail(); }
       var db = self.db = window.openDatabase('chillax', '1.0', 'Chillax RSS data', 50 * 1024 * 1024);
@@ -599,6 +644,9 @@
         })
       });
     };
+    
+    // Select feeds, run callback on each feed waiting interval between each
+    // Then run allDone.
     function forEachFeed(callback, interval, allDone) {
       self.db.transaction(function (tx) {
         tx.executeSql("SELECT * from feeds ORDER BY seq ASC", [], function(tx, result) {
@@ -614,6 +662,8 @@
         });
       });
     };
+    
+    // Select a feed and run callback on it.
     function withFeed(feedId, callback) {
       self.db.transaction(function (tx) {
         tx.executeSql("SELECT * from feeds WHERE id = ? LIMIT 1", [feedId], function(tx, result) {
@@ -621,6 +671,9 @@
         });
       });
     };
+    
+    // Now for some utility functions...
+    // get the icon URL for a feed
     function getIconURL(feedSpec) {
       var baseUrl, matches = feedSpec.link.match(/^[a-z]+:\/\/[^\/]+\//i);
       baseUrl = feedSpec.homepage || (matches && matches[0]);
@@ -631,6 +684,8 @@
       }
       return icon;
     }
+    
+    // convert a Web SQL resultSet row into a regular mutable JS object
     function rowToObject(item) {
       var ret = {};
       for (var i in item) {
@@ -638,14 +693,34 @@
       }
       return ret;
     };
+    
+    // Convert domains into something that is worth showing
     function normalizeDomain(url) {
       var pieces = url.split(/\/+/g),
         domain = pieces[1] && (url.indexOf('://') != -1) ? pieces[1] : pieces[0];
       return domain.replace(/^www\./, '');
     };
-    function cleanFulltext(fulltext) {
+    
+    // Fix some typical gotchas with item.title in RSS feeds
+    function cleanTitle(title) {
+      // decoding entities being the most common problem.
+      return $('<div/>').html(title).text();
+    }
+    
+    // Fix some minor things about the fulltext provided by viewtext.org
+    function cleanFulltext(fulltext, item) {
+      fulltext = $.trim(fulltext);
+      if (!fulltext) {
+        // This is almost certainly just an image
+        if (item.link.match(/.*\.(png|gif|jpg)$/)) {
+          var $img = $('<img/>').attr('src', item.link);
+          return $('<div/>').append($img).html();
+        }
+      }
       return fulltext.replace(/<h1>PAGE (\d+)<\/h1>/g, '<div class="pagechange">page $1</div>');
     };
+    
+    // calculate the height of an item once sent to the infini-scroll
     function calcHeight(item) {
       if ((!o.collapseClicked || !item.clicked) && $.trim(item.description).length > 10) {
         // logic regarding visibility...
@@ -653,14 +728,21 @@
       }
       // collapse this item
       return o.heights.item[item.multisource ? 2 : 3];
-      
     };
+    
+    // convert all those whacky RSS date formats to good old UNIX time.
     function updatedToUnixTime(date) {
       if (!date) { return (new Date()).getTime() / 1000; }
-      try { date = new Date(date); }
-      catch (e) { date = Date.parse(date); }
-      return (date ? date.getTime() : (new Date()).getTime()) / 1000;
+      var newDate = new Date(date);
+      if (isNaN(newDate.getTime())) {
+        newDate = Date.parse(date.replace(/[\+-]\d+:\d+$/,'').replace(/Z$/, ''));
+      }
+      return (newDate ? newDate.getTime() : (new Date()).getTime()) / 1000;
     }
+    
+    // Fetch items from the database into the local self.items cache
+    // Note: they still need to be spliced into the infini-scroll's self.items to go live.
+    // fullRefresh triggers a force redraw after this is finished.
     function fetchItems(fullRefresh) {
       self.db.transaction(function (tx) {
         var after = ((new Date()).getTime() / 1000) - 86400,
@@ -695,6 +777,9 @@
         });
       });
     };
+    
+    // For the given feed, fetch the RSS, parse it, and insert item entries in the DB
+    // Fire callback after this is complete
     function pullNewItems(feed, callback) {
       
       function insertItems(data) {
@@ -710,7 +795,7 @@
             domain = normalizeDomain(item.link);
           if (!domains[domain]) { domains[domain] = true; domainCount++; }
           self.db.transaction(function (tx) {
-            var args = [item.title, shortDesc, cleanFulltext(item.description), updated, item.author, domain, feed.id, item.link];
+            var args = [cleanTitle(item.title), shortDesc, cleanFulltext(item.description, item), updated, item.author, domain, feed.id, item.link];
             tx.executeSql("UPDATE items SET title=?, description=?, full_text=?, updated=?, author=?, domain=? WHERE \
               feed_id=? AND link=?", args, 
             function(tx, result) {
@@ -736,11 +821,15 @@
       
     };
     
-    function fetchAllFeeds(fullRefresh, interval) {
+    // execute pullNewItems for every feed, optionally force redrawing after each
+    // and spacing out pulls by interval milliseconds
+    function pullAllFeeds(fullRefresh, interval) {
       fullRefresh = fullRefresh===true;
       var callback = function() { fetchItems(fullRefresh); };
       forEachFeed(function(feed) { pullNewItems(feed, callback); }, interval);
     };
+
+    // Record a click on a news item in the database, then execute callback
     function recordClick(item, callback) {
       self.db.transaction(function (tx) {
         tx.executeSql("UPDATE items SET clicked = 1 WHERE id=?", [item.id], function(tx, result) {
@@ -752,6 +841,11 @@
         });
       });
     };
+    
+    // Add the feed specified by feedSpec to the DB then execute callback
+    // feedSpec looks like:
+    // { label: 'foo', link: 'http://not.optional/.rss', homepage: 'http://optional', 
+    //   icon: 'http://optional/icon.png', use_viewtext: true }
     function addFeed(feedSpec, callback) {
       feedSpec.use_viewtext = (feedSpec.use_viewtext === undefined || feedSpec.use_viewtext) ? 1 : 0;
       self.db.transaction(function (tx) {
@@ -765,6 +859,8 @@
         });
       });
     }
+    
+    // delete the feed with id feedId from the database and execute callback
     function removeFeed(feedId, callback) {
       self.db.transaction(function (tx) {
         tx.executeSql('DELETE FROM items WHERE feed_id = ?', [feedId]);
@@ -777,19 +873,24 @@
     /**
      * Private functions, UI related
      **/
+     
+    // initialize all the front-panel widgets
     function initUI() {
+      // the infiniscroll
       $els.infiniscroll.infiniscroll({
         sectionProperty: 'feed_id',
         createRow: createRow,
         refreshRows: refreshRows,
         sectionChange: sectionChange
       });
+      // the tabs for social sites
       $els.socialFrame.tabs({
         collapsible: true,
         show: showSocialTab,
         select: selectSocialTab
       }).removeClass('ui-corner-all');
 
+      // handle clicking on items, sources
       $els.infiniscroll.click(function(e) {
         var $a = $(e.target).closest('a');
         if ($a.length && wasLeftClick(e)) { clickItem($a); return false; }
@@ -801,15 +902,18 @@
         }
       });
 
+      // three sourcelist control buttons in the lower left
       $els.addSource.button({text: false, icons: {primary: 'ui-icon-plusthick'}}).click(openAddDialog);
       $els.removeSource.button({text: false, icons: {primary: 'ui-icon-minusthick'}}).click(openRemoveDialog);
       $els.refreshSource.button({text: false, icons: {primary: 'ui-icon-refresh'}}).click(refreshAllFeeds);
       $els.sourceButtons.buttonset();
 
+      // base options for all dialogs
       var dialogOptions = {
         autoOpen: false,
         resizable: false,
         closable: false,
+        // allows enter to submit the form in the dialog, autofocuses, prettifies buttons
         open: function(event) {
           var $this = $(this);
           var $dialog = $(this).closest('.ui-dialog');
@@ -827,9 +931,13 @@
           $dialog.find('button').not(':last').addClass('ui-priority-secondary'); 
         }
       };
+      
+      // two dialogs, one to add sources and one to remove them
       $els.addDialog.dialog($.extend({}, dialogOptions, { buttons: { 'Cancel': closeDialog, 'Add Feed': okAddDialog } }));
       $els.removeDialog.dialog($.extend({}, dialogOptions, { buttons: { 'Cancel': closeDialog, 'Remove Feed': okRemoveDialog } }));
     }
+    
+    // get feeds from the DB and show them in the sources pane
     function refreshSideBar() {
       $els.sources.children('.source').remove();
       forEachFeed(function(feed) {
@@ -840,10 +948,14 @@
         $els.sources.append($div);
       });
     };
+    
+    // update source indicators when the infini-scroll moves between sections
     function sectionChange(event, ui) {
       $els.sources.find('.source').removeClass('active');
       $('#feed-' + ui.sectionId).addClass('active');
     };
+    
+    // callback that creates elements for a row in the infini-scroll
     function createRow(item) {
       var $row;
       if (item.type=='feed_header') {
@@ -862,6 +974,8 @@
       }
       return $row;
     };
+    
+    // set the appropriate height for the preview text for an item
     function fixRowPreview($row, item) {
       var previewHeight = item.height - o.heights.item_title,
         $preview = $row.find('.preview');
@@ -873,6 +987,8 @@
         }
       } else { $preview.hide(); }
     }
+    
+    // sort function for rows
     function compareRows(row1, row2) {
       if (row1.seq < row2.seq) { return -1; }
       if (row1.seq == row2.seq) {
@@ -888,6 +1004,8 @@
       }
       return 1;
     };
+    
+    // ..used to find rows in the local self.items cache
     function findRow(row) {
       var target;
       $.each(self.items, function(index, item) {
@@ -896,6 +1014,10 @@
       })
       return target;
     };
+    
+    // callback for splicing self.items into the infini-scroll's self.items,
+    // which is a different set because our self.items here can get updated
+    // from the DB before the scrolling action allows it to be shown in the UI
     function refreshRows(rows, first, last) {
       if (first === undefined || last === undefined) {
         Array.prototype.splice.apply(rows, [0, rows.length].concat(self.items));
@@ -916,6 +1038,8 @@
         }
       }
     };
+    
+    // helper for drawing the top of the contentFrame for an article
     function createTitle(item) {
       var $a = $('<a class="title"></a>'),
         updated = new Date(item.updated * 1000),
@@ -931,20 +1055,29 @@
       item.author && $('<div class="author"></div>').text(item.author).appendTo($a);
       return $a;
     };
+    
+    // detect if an event expresses a left click (wouldn't work in IE)
     function wasLeftClick(event) {
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return false; }
       return !event.button;
     }
+    
+    // handle clicking on an item
     function clickItem($a) {
       var item = $a.data('feed_item'),
         initialHeight = item.height;
+      // first, record the click in the DB
       recordClick(item, function(result) {
+        // highlight the item in the infini-scroll
         $els.infiniscroll.find('.active').removeClass('active');
         $a.addClass('clicked').addClass('active');
         self.showingItem = item.id;
+        
+        // show the article in the contentFrame
         $els.contentFrame.empty().scrollTop(0);
         var $div = $('<div class="article"></div>');
         var $content = $('<div class="content"></div>').html(item.full_text.text).appendTo($div);
+        // wrap images over a certain width so they show up like figures, centered and set apart
         $content.find('img').load(function() {
           var $that = $(this);
           setTimeout(function() {
@@ -952,13 +1085,20 @@
           });
         });
         $div.prepend(createTitle(item)).appendTo($els.contentFrame);
+        
+        // add tabs for the social media sites
         addSocialTabs(item);
+        
+        // doesn't work :-(
         if (o.collapseClicked) {
           fixRowPreview($a.parent(), item);
           $els.infiniscroll.infiniscroll('repositionAfter', $a.parent(), item.height - initialHeight);
         }
       });
     };
+    
+    // when viewing an article, add tabs to the lower right to comment pages on
+    // social news sites
     function addSocialTabs(item) {
       var numTabs = $els.socialFrame.tabs('length');
       for (var i = 0; i < numTabs; i++) { $els.socialFrame.tabs('remove', 0); }
@@ -1009,6 +1149,8 @@
         self.addingTabs = false;
       });
     };
+    
+    // callback for when a social media tab is clicked, sliding up the socialFrame.
     function showSocialTab(event, ui) { 
       if (!self.addingTabs && !$els.socialFrame.hasClass('open')) {
         self.socialHeight = Math.min($(window).height() * 0.8, Math.max($(window).height() * 0.6, 300));
@@ -1023,6 +1165,8 @@
         $(ui.tab).parent().removeClass('loading');
       }
     };
+    
+    // if we are unselecting the current tab, slide down the socialFrame.
     function selectSocialTab(event, ui) {
       if ($(ui.tab).parent().is('.ui-tabs-selected')) {
         $els.socialFrame.removeClass('open');
@@ -1034,10 +1178,14 @@
     /**
      * Private functions for the dialogs
      **/
+    
+    // open and prepare the Add Feed dialog
     function openAddDialog() {
       $els.addDialog.find('.dialog-error').hide();
       $els.addDialog.dialog('open');
     }
+    
+    // handle clicking Add button on the Add Feed dialog
     function okAddDialog() {
       var $this = $(this),
         $label = $this.find('input[name=label]'),
@@ -1068,6 +1216,8 @@
           use_viewtext: $this.find('select[name=use_viewtext]').val()
         }, function(result) {
           var id = result.insertId;
+          $label.val(''); $homepage.val(''); $url.val('');
+          $this.find('select[name=use_viewtext]').val(1);
           $this.dialog('close');
           refreshSideBar();
           $('#feed-'+id).addClass('ui-state-disabled');
@@ -1079,9 +1229,8 @@
         });
       }
     }
-    function closeDialog() {
-      $(this).dialog('close');
-    }
+
+    // open and prepare the Remove Feed dialog
     function openRemoveDialog() {
       var $sel = $els.removeDialog.find('select[name=feed_id]').empty();
       forEachFeed(function(feed) {
@@ -1093,6 +1242,8 @@
         $els.removeDialog.dialog('open');
       });
     }
+    
+    // handle clicking Remove button on the Remove Feed dialog
     function okRemoveDialog() {
       var $this = $(this),
         feedId = $els.removeDialog.find('select[name=feed_id]').val();
@@ -1103,15 +1254,22 @@
       });
     }
     
+    // generic handler to close the current dialog
+    function closeDialog() {
+      $(this).dialog('close');
+    }
+
+    
     /**
      * Private functions that keep time, e.g. timing between refreshing all feeds
      **/
+    // These functions handle pulling all feeds every o.refreshInterval ms
     function setRefreshTimer() {
       self.fetchAllTimeout = setTimeout(refreshAllFeeds, o.refreshInterval);
     }
     function refreshAllFeeds(dontSetTimer) {
       clearTimeout(self.fetchAllTimeout);
-      fetchAllFeeds(false, 5 * 1000);
+      pullAllFeeds(false, 5 * 1000);
       if (dontSetTimer !== true) { setRefreshTimer(); }
     }
     
@@ -1120,29 +1278,33 @@
      * configures all of Chillax's internal widgets, binds initial events
      **/
     function init() {
+      // To drop/regenerate the DB, include 'clear' in the hashtag and hit refresh.
       var clear = window.location.hash.match('clear');
+      
+      // Get a handle to the Web SQL DB.
       initializeDatastore(clear, function() {
+        // It worked!
         window.location.hash = '';
         refreshSideBar();
         fetchItems(true);
         if (navigator.onLine !== false) {
-          fetchAllFeeds(true);
+          pullAllFeeds(true);
+          setRefreshTimer();
         }
-        setRefreshTimer();
         initUI();
       }, function() {
+        // Tell user the browser they're using doesn't have Web SQL.
         alert('You must use either Chrome, Safari, or Opera and enable Web Database storage to view this site.');
         return false;
       });
     };
     
-    // export some functions for debugging purposes
-    self.fetchItems = fetchItems;
-    self.fetchAllFeeds = fetchAllFeeds;
-    
     init();
   }
   
-  $.chillax = new ChillaxReader({});
+  // Whew! Instantiate a ChillaxReader onDOMReady.
+  $(function() {
+    $.chillax = new ChillaxReader({});
+  });
 
 })(jQuery);

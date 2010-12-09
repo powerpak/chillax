@@ -46,8 +46,8 @@ So, I really wanted to build this reader to use scrolling as the primary and onl
 
 Even better, an infinitely scrolling widget gives you a clever way to update items without disrupting the user.  All updates simply focus on items right outside the viewport, so when they scroll back in, they have suddenly transformed (think of pedestrian spawning in any GTA-esque sandbox game).  So as you browse around, things magically become fresh.  Imagine a magazine where pages you read are instantly replaced with new content.
 
-### So how's that working out for you, eh
+### 
 
-The infinitely scrolling list
+The infinitely scrolling 
 
 ## Future directions
