@@ -178,6 +178,41 @@
   $.id = function(elem) {
     return $.data($(elem).get(0));
   };
+  // utilities for processing arrays over time
+  $.asyncEach = function(arr, process, callback, completed, interval) {
+    var cnt = 0;
+    interval = (interval===undefined) ? 1 : interval;
+    if (arr[cnt]===undefined) { if (typeof(completed)=='function') { completed(); } return false; }
+    var work = function() {
+      var item = arr[cnt];
+      process.apply(item, [cnt, item]);
+      if (typeof(callback)=='function') { callback.apply(item, [cnt]); }
+      cnt += 1;
+      if (cnt < arr.length) {
+        setTimeout(work, interval);
+      } else {
+        if (typeof(completed)=='function') { completed.apply(item); }
+      }
+    };
+    setTimeout(work, 1);
+  };
+  $.fn.asyncEach = function(process, callback, completed) {
+    var cnt = 0;
+    var jq = this;
+    if (!jq.length) { if (typeof(completed)=='function') { completed(); } return; }
+    var work = function() {
+      var item = jq.get(cnt);
+      process.apply(item, [cnt, item]);
+      if (typeof(callback)=='function') { callback.apply(item, [cnt]); }
+      cnt += 1;
+      if (cnt < jq.length) {
+        setTimeout(work, 1);
+      } else {
+        if (typeof(completed)=='function') { completed.apply(item); }
+      }
+    };
+    setTimeout(work, 1);
+  };
 
   /* 
    * infiniscroll: a widget to show an infinitely looping list of items,
@@ -658,15 +693,16 @@
     function forEachFeed(callback, interval, allDone) {
       self.db.transaction(function (tx) {
         tx.executeSql("SELECT * from feeds ORDER BY seq ASC", [], function(tx, result) {
+          var items = [];
           for (var i = 0; i < result.rows.length; i++) {
-            var item = result.rows.item(i);
-            if (interval) {
-              setTimeout(function() { callback(item); }, interval * i + 1);
-            } else {
-              callback(item);
-            }
+            items.push(result.rows.item(i));
           }
-          $.isFunction(allDone) && allDone();
+          if (interval) {
+            $.asyncEach(items, function() { callback(this); }, function() {}, allDone, interval);
+          } else {
+            for (var i = 0; i < items.length; i++) { callback(items[i]); }
+            $.isFunction(allDone) && allDone();
+          }
         });
       });
     };
@@ -1310,7 +1346,7 @@
         refreshSideBar();
         fetchItems(true);
         if (navigator.onLine !== false) {
-          pullAllFeeds(true);
+          pullAllFeeds(true, 2 * 1000);
           setRefreshTimer();
         }
         initUI();
