@@ -127,19 +127,11 @@ body {
 .infini-row a:visited {
   color: black;
 }
-/*.infini-row.item a:hover, .infini-row.item a.hover, .infini-row.item a:hover *, .infini-row.item a.hover * {
-  background: #EBEFF7;
-}
-.infini-row.item a:hover, .infini-row.item a.hover {
-  border-bottom-color: #D5D5D5;
-  border-top-color: #F3F3F3;
-}*/
 .infini-row.item a:hover, .infini-row.item a.hover {
   box-shadow: 0 0 5px #FF0000;
 }
 .infini-row a.clicked:not(.active) h2 {
   color: #855454;
-  /*font-weight: bold;*/
 }
 
 .infini-row h2 {
@@ -279,6 +271,16 @@ body {
 #social-frame iframe {
   width: 100%;
   height: 100%;
+}
+
+#welcome {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -250px -300px;
+}
+#welcome p {
+  text-align: center;
 }
 
 /**

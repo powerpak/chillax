@@ -1,8 +1,9 @@
 CACHE MANIFEST
-# r1
+# r3
 CACHE:
 /images/reddit_icon.gif
 /images/rss.png
+/images/chillax.png
 /js/jquery-ui-1.8.6.min.js
 /js/jquery-1.4.2.min.js
 /js/jquery.jfeed.js

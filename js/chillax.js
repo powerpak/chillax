@@ -947,8 +947,8 @@
         $div.prepend(createTitle(item)).appendTo($els.contentFrame);
         addSocialTabs(item);
         if (o.collapseClicked) {
-          //fixRowPreview($a.parent(), item);
-          //$els.infiniscroll.infiniscroll('repositionAfter', $a.parent(), item.height - initialHeight);
+          fixRowPreview($a.parent(), item);
+          $els.infiniscroll.infiniscroll('repositionAfter', $a.parent(), item.height - initialHeight);
         }
       });
     };
@@ -1067,7 +1067,6 @@
           withFeed(id, function(feed) { 
             pullNewItems(feed, function() {
               fetchItems(true);
-              $('#feed-'+id).removeClass('ui-state-disabled');
             });
           });
         });
