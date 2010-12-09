@@ -1122,37 +1122,41 @@
     function clickItem($a) {
       var item = $a.data('feed_item'),
         initialHeight = item.height;
-      // first, record the click in the DB
-      recordClick(item, function(result) {
-        // highlight the item in the infini-scroll
-        $els.infiniscroll.find('.active').removeClass('active');
-        $a.addClass('clicked').addClass('active');
-        self.showingItem = item.id;
-        
-        // show the article in the contentFrame
-        $els.contentFrame.removeClass('iframed').empty().scrollTop(0);
-        var $div = $('<div class="article"></div>');
-        var $content = $('<div class="content"></div>').html(item.full_text.text).appendTo($div);
-        // wrap images over a certain width so they show up like figures, centered and set apart
-        $content.find('img').load(function() {
-          var $that = $(this);
-          setTimeout(function() {
-            if ($that.width() > o.wrapImageWidth) { $that.wrap('<span class="chillax-wrap-image"/>'); }
-          });
+
+      // set clicked state in local cache
+      item.clicked = 1;
+      
+      // highlight the item in the infini-scroll
+      $els.infiniscroll.find('.active').removeClass('active');
+      $a.addClass('clicked').addClass('active');
+      self.showingItem = item.id;
+      
+      // show the article in the contentFrame
+      $els.contentFrame.removeClass('iframed').empty().scrollTop(0);
+      var $div = $('<div class="article"></div>');
+      var $content = $('<div class="content"></div>').html(item.full_text.text).appendTo($div);
+      // wrap images over a certain width so they show up like figures, centered and set apart
+      $content.find('img').load(function() {
+        var $that = $(this);
+        setTimeout(function() {
+          if ($that.width() > o.wrapImageWidth) { $that.wrap('<span class="chillax-wrap-image"/>'); }
         });
-        var $title = createTitle(item);
-        $div.prepend($title).appendTo($els.contentFrame);
-        o.openFullArticlesInline && $title.click(clickTitle);        
-        
-        // add tabs for the social media sites
-        addSocialTabs(item);
-        
-        // doesn't work :-(
-        if (o.collapseClicked) {
-          fixRowPreview($a.parent(), item);
-          $els.infiniscroll.infiniscroll('repositionAfter', $a.parent(), item.height - initialHeight);
-        }
       });
+      var $title = createTitle(item);
+      $div.prepend($title).appendTo($els.contentFrame);
+      o.openFullArticlesInline && $title.click(clickTitle);        
+      
+      // add tabs for the social media sites
+      addSocialTabs(item);
+      
+      // record the click in the DB
+      recordClick(item, function(result) { });
+      
+      // doesn't work :-(
+      if (o.collapseClicked) {
+        fixRowPreview($a.parent(), item);
+        $els.infiniscroll.infiniscroll('repositionAfter', $a.parent(), item.height - initialHeight);
+      }
     };
     
     // when viewing an article, add tabs to the lower right to comment pages on
