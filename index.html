@@ -53,10 +53,10 @@
           <div class="form-item">
             <label for="label">Label</label>
             <input type="text" name="label" id="label" value="" class="ui-widget-content ui-corner-all" />
-            <select name="use_viewtext">
-              <option value="1">Fetch full-text</option>
-              <option value="0">Fetch feed only</option>
-            </select>
+            <div class="option-set-right">
+              <label><input type="radio" name="use_viewtext" value="1" checked="checked">Fetch full-text</label>
+              <label><input type="radio" name="use_viewtext" value="0">Fetch feed only</label>
+            </div>
           </div>
           <div class="form-item">
             <label for="url">URL</label>

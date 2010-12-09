@@ -1,4 +1,4 @@
-# The design of chillax
+# The design of Chillax
 
 ## Introduction
 

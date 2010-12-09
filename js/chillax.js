@@ -567,7 +567,8 @@
         },{
           label: 'ars etc',
           link: 'http://feeds.arstechnica.com/arstechnica/etc/',
-          homepage: 'http://arstechnica.com'
+          homepage: 'http://arstechnica.com',
+          use_viewtext: false
         },{
           label: 'reddit.com',
           link: 'http://feeds2.feedburner.com/CleanReddit',
@@ -586,6 +587,8 @@
       refreshInterval: 20 * 60 * 1000,
       // collapse items after clicking on them.  This doesn't work correctly so it's off
       collapseClicked: false,
+      // open articles in an iframe, not a new tab
+      openFullArticlesInline: false,
       // URLs for APIs and social websites that will be used
       rssProxy: 'http://chillaxapp.com/proxy.php?url=',
       defaultFavicon: 'http://chillaxapp.com/images/rss.png',
@@ -1041,7 +1044,7 @@
     
     // helper for drawing the top of the contentFrame for an article
     function createTitle(item) {
-      var $a = $('<a class="title"></a>'),
+      var $a = $('<a class="title" title="Click to open the article as the original webpage."></a>'),
         updated = new Date(item.updated * 1000),
         hours = updated.getHours(),
         amorpm = updated.getHours >= 12 ? ' PM' : ' AM',
@@ -1055,6 +1058,18 @@
       item.author && $('<div class="author"></div>').text(item.author).appendTo($a);
       return $a;
     };
+    
+    // handler for clicking on the title in a contentFrame, if so desired
+    // replaces the contentFrame contents with an iframe of the full linked article
+    function clickTitle(event) {
+      var href = $(this).attr('href');
+      if (wasLeftClick(event)) {
+        $els.contentFrame.addClass('iframed').empty().scrollTop(0);
+        var $iframe = $('<iframe id="content-full" frameborder="0"/>');
+        $iframe.attr('src', href).appendTo($els.contentFrame);
+        return false;
+      }
+    }
     
     // detect if an event expresses a left click (wouldn't work in IE)
     function wasLeftClick(event) {
@@ -1074,7 +1089,7 @@
         self.showingItem = item.id;
         
         // show the article in the contentFrame
-        $els.contentFrame.empty().scrollTop(0);
+        $els.contentFrame.removeClass('iframed').empty().scrollTop(0);
         var $div = $('<div class="article"></div>');
         var $content = $('<div class="content"></div>').html(item.full_text.text).appendTo($div);
         // wrap images over a certain width so they show up like figures, centered and set apart
@@ -1084,7 +1099,9 @@
             if ($that.width() > o.wrapImageWidth) { $that.wrap('<span class="chillax-wrap-image"/>'); }
           });
         });
-        $div.prepend(createTitle(item)).appendTo($els.contentFrame);
+        var $title = createTitle(item);
+        $div.prepend($title).appendTo($els.contentFrame);
+        o.openFullArticlesInline && $title.click(clickTitle);        
         
         // add tabs for the social media sites
         addSocialTabs(item);
@@ -1213,11 +1230,11 @@
           link: $url.val(),
           homepage: $homepage.val(),
           label: $label.val(),
-          use_viewtext: $this.find('select[name=use_viewtext]').val()
+          use_viewtext: parseInt($this.find('[name=use_viewtext]:checked').val(), 10)
         }, function(result) {
           var id = result.insertId;
           $label.val(''); $homepage.val(''); $url.val('');
-          $this.find('select[name=use_viewtext]').val(1);
+          $this.find('[name=use_viewtext][value=1]').attr('checked', true);
           $this.dialog('close');
           refreshSideBar();
           $('#feed-'+id).addClass('ui-state-disabled');

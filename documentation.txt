@@ -1,0 +1,57 @@
+# How to use Chillax
+
+## A note
+
+Hopefully, as long as you are familiar with the concept of an RSS reader, Chillax isn't too far off from familiarity.  There's only one page (screen?) and two miniscule dialog boxes.  Even if you aren't, have no fear, you've almost certainly seen something a bit like this before!
+
+## What it does
+
+Chillax gives you stuff from the internet using an age-old technology called RSS that literally comes in the box with just about any website authoring tool but few people actually bother to try to use it.  The goal is to let you veg out and read some good articles.  Your heart rate should decrease while using Chillax, otherwise I have really picked an inappropriate name.
+
+### Getting started
+
+*Important:* To use Chillax you need to use **Chrome** or **Safari**.  Sorry, Firefox, you're not cool enough anymore...
+
+Go to http://chillaxapp.com .  You're dropped into the main interface.  If it's the first time you've been here, I give you some RSS feeds to start with.  It might take a little while for the feeds to populate, but you should see them at the far left start lighting up and items will show up in the middle column.
+
+At this point, the middle column is your browsing territory.  Scroll up and down it with the trackpad/scrollwheel.  As you do this you'll notice that the current source of the items you're looking at "sticks" to the top, kind of like long lists on an iPhone.  It also lights up in blue in the far left column.
+
+Each article shows its headline, and some opening text right below.  If the current source presents links from many sites, e.g. the "news.yc >20" feed or the "reddit.com" feed, you'll also see a domain name in the right-hand corner that tells you where the content is from.  With any luck some article will catch your eye and you'll want to read more.
+
+Now here comes the hard part: click on the item.  Wait, that wasn't very hard.  Okay, it should now show up in the large right-hand column.  If this was a fairly typical kind of "web content", e.g., an article or a picture, you should see a beautifully rendered version of the article's contents without any of the typical website accoutrements.  If you want to see the full version of the article as it is (and this should be fairly rare, for the instances where viewtext.org wasn't able to extract content) click on the title of the article in the right column, and it will open in a new browser tab.
+
+### Social news site integration
+
+For some articles – for the default feeds, the news.yc and reddit.com feeds especially – you will notice some tabs popping up in the lower right hand corner when reading an article.  You can click on these tabs and comment threads for the currently viewed article will slide up.  If you are logged into either site, you can interact with these pages much like normal.
+
+While the tabs are ghostly, they are still loading; once they pop into full opacity, they are ready to be used.
+
+Not all articles, even those in the feeds straight from the social news sites, will have comment threads visible as tabs.  While the delay is usually on the order of a few minutes, it takes some time for new threads to propagate to the APIs called to create the tabs.
+
+## Changing the feed sources
+
+Right now you are able to add and remove RSS feeds.  Any changes you make will be saved between visits; it's actually all saved within your browser so you carry it with you.  But more on that later.
+
+### Adding an RSS feed
+
+Get the URL of the RSS feed you wish to add, and then click the plus button in the lower leftmost corner.  You will be able to pick a label for the feed, and enter the feed URL.  If the feed is for a website, try entering the website URL where the dialog asks for the homepage.  This gives Chillax a better opportunity of picking up the right icon for the website.
+
+If you wish to fetch full-text articles for this RSS feed, leave the "Fetch full-text" setting as is.  Not all feeds work well with this mode, especially specialty feeds of media items, or comment threads, or feeds that link to short descriptions of other links (e.g., the ars etc feed).  For these sorts of feeds, change the setting to "Fetch feed only".
+
+### Removing an RSS feed
+
+Click the minus button in the lower leftmost corner, pick a feed you want to axe, and then click Remove.  Obviously, once you remove a feed, all of its articles are gone.
+
+### Refresh all feeds
+
+The refresh button in the lower left allows you to manually initiate a pull from all of your RSS sources.  Note: it might take a few minutes for the new items to show up, especially if the feed fetches full-text for its articles.
+
+## Advanced tips
+
+You can middle-click or Command-click on the items in the second column to open them directly in another tab.
+
+Right now only items from the previous day are shown.  However, tracking views and clicks of your feed items to smartly prioritize articles is a feature that is begging to be implemented, and would be very possible to do.
+
+You are able to browse the text of all of your articles offline, and in fact you may be surprised to find that you can visit http://chillaxapp.com without any internet connection at all.  This is because this is an HTML Offline-ready application.  All articles are stored in a Web SQL database within your browser.
+
+If for some reason you find that you need to clear this database, visit http://chillaxapp.com#clear and hit Refresh or Reload on your browser to reset all of your feeds.  *Warning:* do not do this unless you intend to delete all of your feed data!
