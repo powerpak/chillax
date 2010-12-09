@@ -655,6 +655,12 @@
       return o.heights.item[item.multisource ? 2 : 3];
       
     };
+    function updatedToUnixTime(date) {
+      if (!date) { return (new Date()).getTime() / 1000; }
+      try { date = new Date(date); }
+      catch (e) { date = Date.parse(date); }
+      return (date ? date.getTime() : (new Date()).getTime()) / 1000;
+    }
     function fetchItems(fullRefresh) {
       self.db.transaction(function (tx) {
         var after = ((new Date()).getTime() / 1000) - 86400,
@@ -699,7 +705,7 @@
         });
         var length = feedData.items && feedData.items.length, count = 0, domains = {}, domainCount = 0;
         feedData.items && $.each(feedData.items, function(index, item) {
-          var updated = (item.updated ? new Date(item.updated) : new Date()).getTime() / 1000,
+          var updated = updatedToUnixTime(item.updated),
             shortDesc = $('<div>'+item.description+'</div>').text().substr(0, 300),
             domain = normalizeDomain(item.link);
           if (!domains[domain]) { domains[domain] = true; domainCount++; }
@@ -729,6 +735,7 @@
       }
       
     };
+    
     function fetchAllFeeds(fullRefresh, interval) {
       fullRefresh = fullRefresh===true;
       var callback = function() { fetchItems(fullRefresh); };

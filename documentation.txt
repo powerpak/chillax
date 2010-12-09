@@ -1,0 +1,53 @@
+# The design of chillax
+
+## Introduction
+
+RSS is an undervalued technology, currently used most often by spam bots and content aggregation sites to munge content from around the internet to boost somebody's search rankings.  However, in spite of it being repeatedly called dead over the last decade (just Google "rss is dead"), it really is a useful technology for automatically distilling complicated sites into their most logical form: a list of content.  RSS was built to solve the problem of having to visit a site over and over again to see new content.  It's built into the vast majority of websites, despite so few users using it.  My hypothesis coming into this project was that people don't use RSS because nobody has made a good UI for it.  To get it working, you usually have to download special software, and plug in URL's to XML feeds, and debug weird errors from time to time--not enjoyable or possible for most people.
+
+In addition, most readers make you do a lot of work.  They feel like work.  There is a big inbox with lots of items, and the internet pours news in your face and demands that it be read.  That's no fun, either.  You often have to spend a great deal of effort managing the flow of news, marking items as read and figuring out how to filter noisy sources.  Because of how some feeds are constructed, you don't get any of the article content, so you have to click on a link and open a separate browser to read the article, and then it is coated in ads and you might as well have just bookmarked the site and avoided RSS altogether.
+
+Most new "social" sites are actually coming close to figuring out solutions to this.  Reddit, for example, relies on users to submit links to articles, and uses voting to construct a free-flowing front page of articles.  Twitter provides a never-ending stream of updates from your friends which usually include links to web content, and Facebook is moving in a similar direction with the News Feed and Likes.  The idea is to just let news move past you; whatever is most current is most interesting.  Instead of clicking 10 times to get to your content, it is presented up front with cues on whether you will find it interesting or not.
+
+I think today's RSS readers could glean a lot of UI tips from Facebook's News Feed and other similar interfaces.  I wouldn't want my news to be so social-network-integrated, but there are principles to why people can watch a FB News Feed all day long but an RSS inbox is only for the power users.
+
+Chillax is my attempt at creating an RSS reader with a UI that I like.  Because RSS is cantankerous at times and because of my decision to use the browser, there were some concessions that had to be made from my original vision.
+
+## Why not a native app?
+
+Native apps rock, and there is a reason why native apps are flying off the virtual shelves for mobile devices instead of mobile websites.  They can provide a much cleaner, faster, and integrated experience.  However, HTML5 is pushing the envelope for what browsers can do, and some browsers like Chrome are able to execute JS with lightning speed so you can deliver a comparable experience.
+
+I decided to go with an HTML5 app.  HTML5 lets me target multiple platforms with the same code (in theory anybody with the modern browser).  I was interested in the capabilities of some of this more newfangled HTML5 stuff, like Offline caching, and Web SQL, where you have access to a full RDBMS from JavaScript on the client side.  In theory, these two things are all an RSS reader really needs, besides XML parsing (which the browser can do) and something to show a UI (also perfectly possible with HTML/CSS).  At the end of the day, I should hopefully be able to retarget my app for mobile devices with only a few stylistic changes in CSS to lay things out better on a smaller screen.
+
+## The overall concept
+
+- 1 page app: 1 .HTML file with some CSS and JS
+- All RSS fetching done via AJAX/JSONP
+- All parsing done in the browser in JS
+- Store items for offline reading and between visits in a Web SQL database
+- Use cache.manifest to allow the whole app to run without an internet connection
+- jQuery, jQuery UI and lots of CSS3 for the UI
+- Try to use other people's API's as much as possible
+
+## Breaking it down
+
+When you go to chillaxapp.com, you fetch one page, index.html.  This points to cache.manifest, which directs the browser to immediately cache all the CSS and JS on http://chillaxapp.com/ . 
+
+The most important JS is in chillax.js.  At the top of this file there are two small jQuery plugins: jQuery xmlDOM Plugin, which helps parse XML, and jFeed, which can parse both Atom and RSS documents into standardized JS objects.  The middle of the file is devoted to the $.ui.infiniscroll widget, which is a jQuery UI widget I made to handle the central column of the UI: the infinitely scrolling column of items.  The end of the file defines a ChillaxReader object, which is just a silly way to encapsulate all of the functionality for the page.  A ChillaxReader is instantiated, and that's it.
+
+The css/ folder contains a stylesheet, chillax.css, and a jQuery UI theme called 'syngrey' that I used at one point to make http://quickfuseapps.com/ .
+
+### An infiniscroll?!
+
+The lynchpin of my UI is the infinitely scrolling list of stuff.  Two inspirations for this: the long list menus of iOS, and certain jQuery plugins such as Flexigrid that use virtual elements and create DOM elements on scrolling to simulate long tables/content.  But to my knowledge nobody's ever made a widget like this.
+
+I really like scrolling.  On Mac OS X, the flingy two-finger scrolling is quite the neatly tuned behavior, and part of why I actually prefer trackpads.  Scrolling is probably 90% of the interaction people have with the web, and I have nothing but respect for sites that design well around it and sometimes add clever touches (http://benthebodyguard.com/).
+
+So, I really wanted to build this reader to use scrolling as the primary and only needed method of moving around.  I've had to use RSS readers where you need to click on each feed: click, scroll, click, scroll, click.. and it gets old fast.  To me, scrolling is the epitome of the "browsing" feel.
+
+Even better, an infinitely scrolling widget gives you a clever way to update items without disrupting the user.  All updates simply focus on items right outside the viewport, so when they scroll back in, they have suddenly transformed (think of pedestrian spawning in any GTA-esque sandbox game).  So as you browse around, things magically become fresh.  Imagine a magazine where pages you read are instantly replaced with new content.
+
+### So how's that working out for you, eh
+
+The infinitely scrolling list
+
+## Future directions
