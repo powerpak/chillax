@@ -573,6 +573,11 @@
           label: 'reddit.com',
           link: 'http://feeds2.feedburner.com/CleanReddit',
           homepage: 'http://reddit.com'
+        },{
+          label: 'xkcd',
+          link: 'http://xkcd.com/rss.xml',
+          homepage: 'http://xkcd.com',
+          use_viewtext: false,
         }
       ],
       // predefined heights for items of various types and visibilities
@@ -748,7 +753,7 @@
     // fullRefresh triggers a force redraw after this is finished.
     function fetchItems(fullRefresh) {
       self.db.transaction(function (tx) {
-        var after = ((new Date()).getTime() / 1000) - 86400,
+        var after = ((new Date()).getTime() / 1000) - 2 * 86400,
           cols = 'f_title, label, type, f_link, homepage, seq, icon, f_description, multisource';
         tx.executeSql("SELECT items.*, "+cols+" from items LEFT JOIN feeds on items.feed_id=feeds.id WHERE updated > ?\
           ORDER BY feeds.seq ASC, updated DESC, items.link ASC", [after], function(tx, result) {
