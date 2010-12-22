@@ -530,12 +530,12 @@
       // where are all the relevant UI elements?
       els: {
         infiniscroll: '#infini-scroll',
-        sources: '#sources',
-        content: '#content',
-        contentFrame: '#content-frame',
-        socialFrame: '#social-frame',
-        socialButtons: '#social-buttons',
-        sourceButtons: '#source-buttons',
+        sources: '#chillax-sources',
+        content: '#chillax-content',
+        contentFrame: '#chillax-content-frame',
+        socialFrame: '#chillax-social-frame',
+        socialButtons: '#chillax-social-buttons',
+        sourceButtons: '#chillax-source-buttons',
         addSource: '#add-source',
         removeSource: '#remove-source',
         refreshSource: '#refresh-source',
@@ -567,8 +567,9 @@
           full_text TEXT, \
           author TEXT, \
           updated INTEGER, \
+          guid TEXT, \
           clicked INTEGER DEFAULT 0, \
-          UNIQUE (feed_id, link) ON CONFLICT REPLACE\
+          UNIQUE (feed_id, guid) ON CONFLICT REPLACE\
         )'
       },
       // if the user has no feeds, start with these
@@ -589,7 +590,7 @@
           label: 'gruberball',
           link: 'http://daringfireball.net/index.xml',
           use_viewtext: false
-        } ,{ 
+        },{ 
           label: 'the crimson',
           link: 'http://www.thecrimson.com/feeds/top',
         },{ 
@@ -612,7 +613,24 @@
           label: 'xkcd',
           link: 'http://xkcd.com/rss.xml',
           homepage: 'http://xkcd.com',
-          use_viewtext: false,
+          use_viewtext: false
+        },{
+          label:'daily show',
+          link:'http://www.comedycentral.com/rss/tdsvideos.jhtml',
+          homepage: 'http://www.thedailyshow.com/',
+          use_viewtext: false
+        },{
+          label:'pennyarcade',
+          link: 'http://pipes.yahoo.com/pipes/pipe.run?_id=IjjUcuSa3RGmgXqp1L3fcQ&_render=rss',
+          homepage: 'http://www.penny-arcade.com/',
+          use_viewtext: false
+        },{
+          label:'the onion',
+          link: 'http://feeds.theonion.com/theonion/daily',
+          homepage: 'http://www.theonion.com'
+        },{
+          label:'gothamist',
+          link: 'http://gothamist.com/index.rdf'
         }
       ],
       // predefined heights for items of various types and visibilities
@@ -624,7 +642,7 @@
       // within the contentFrame, set aside from text any images above this width
       wrapImageWidth: 70,
       // how often to fetch new RSS
-      refreshInterval: 20 * 60 * 1000,
+      refreshInterval: 30 * 60 * 1000,
       // collapse items after clicking on them.  This doesn't work correctly so it's off
       collapseClicked: false,
       // open articles in an iframe, not a new tab
@@ -655,6 +673,7 @@
       db: null,
       items: [],              // the current set of news items to be listed
       itemsById: {},
+      feedsWithContent: {},
       showingItem: null,      // item ID for the article shown in contentFrame
       fetchAllTimeout: null   // the timer variable for RSS fetching
     });
@@ -680,10 +699,10 @@
             $.each(o.startFeeds, function(index, val) {
               val.icon = getIconURL(val);
               addFeed(val, function() {
-                if (++count == len) { success(); }
+                if (++count == len) { success(true); }
               });
             });
-          } else { success(); }
+          } else { success(false); }
         })
       });
     };
@@ -753,7 +772,7 @@
     
     // Fix some minor things about the fulltext provided by viewtext.org
     function cleanFulltext(fulltext, item) {
-      fulltext = $.trim(fulltext);
+      fulltext = fulltext.replace(/^\s+|\s+$/g, "");
       if (!fulltext) {
         // This is almost certainly just an image
         if (item.link.match(/.*\.(png|gif|jpg)$/)) {
@@ -788,7 +807,7 @@
     // Note: they still need to be spliced into the infini-scroll's self.items to go live.
     // fullRefresh triggers a force redraw after this is finished.
     function fetchItems(fullRefresh) {
-      self.db.transaction(function (tx) {
+      self.db.readTransaction(function (tx) {
         var after = ((new Date()).getTime() / 1000) - 2 * 86400,
           cols = 'f_title, label, type, f_link, homepage, seq, icon, f_description, multisource';
         tx.executeSql("SELECT items.*, "+cols+" from items LEFT JOIN feeds on items.feed_id=feeds.id WHERE updated > ?\
@@ -798,6 +817,7 @@
           $els.sources.find('.source').addClass('ui-state-disabled');
           for(var i = 0; i < result.rows.length; i++) {
             item = result.rows.item(i);
+            self.activeFeeds = {};
             if (currFeed != item.feed_id) {
               self.items.push({
                 type: 'feed_header', 
@@ -808,6 +828,7 @@
                 height: o.heights.header
               });
               currFeed = item.feed_id;
+              self.feedsWithContent[currFeed] = true;
               $('#feed-' + currFeed).removeClass('ui-state-disabled');
             }
             item = rowToObject(item);
@@ -817,7 +838,7 @@
             item.height = calcHeight(item);
             self.itemsById[item.id] = self.items.push(item) - 1;
           }
-          fullRefresh && $els.infiniscroll.infiniscroll('redraw', true);
+          $els.infiniscroll.infiniscroll('redraw', fullRefresh);
         });
       });
     };
@@ -825,32 +846,45 @@
     // For the given feed, fetch the RSS, parse it, and insert item entries in the DB
     // Fire callback after this is complete
     function pullNewItems(feed, callback) {
-      
+        
       function insertItems(data) {
         var feedData = new $.JFeed(data);
         self.db.transaction(function (tx) {
           tx.executeSql("UPDATE feeds SET f_title = ?, type= ?, f_description = ? WHERE id = ?", 
             [feedData.title, feedData.type, feedData.description, feed.id]);
         });
-        var length = feedData.items && feedData.items.length, count = 0, domains = {}, domainCount = 0;
+        var length = feedData.items && feedData.items.length,
+          count = 0,
+          domains = {},
+          domainCount = 0;
         feedData.items && $.each(feedData.items, function(index, item) {
           var updated = updatedToUnixTime(item.updated),
             shortDesc = $('<div>'+item.description+'</div>').text().substr(0, 300),
-            domain = normalizeDomain(item.link);
+            domain = normalizeDomain(item.link),
+            guid = item.id || item.link;
           if (!domains[domain]) { domains[domain] = true; domainCount++; }
           self.db.transaction(function (tx) {
-            var args = [cleanTitle(item.title), shortDesc, cleanFulltext(item.description, item), updated, item.author, domain, feed.id, item.link];
-            tx.executeSql("UPDATE items SET title=?, description=?, full_text=?, updated=?, author=?, domain=? WHERE \
-              feed_id=? AND link=?", args, 
-            function(tx, result) {
-              !result.rowsAffected && tx.executeSql("INSERT INTO items (title, description, full_text, \
-                updated, author, domain, feed_id, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", args);
+            var args = [cleanTitle(item.title), shortDesc, cleanFulltext(item.description, item), updated, 
+              item.author, domain, item.link, feed.id, guid];
+            tx.executeSql("SELECT updated FROM items where feed_id=? AND guid=?", [feed.id, guid], function(tx, result) {
+              if (result.rows.length) {
+                if (result.rows.item(0).updated <= updated) {
+                  tx.executeSql("UPDATE items SET title=?, description=?, full_text=?, updated=?, author=?, domain=?, \
+                    link=? WHERE feed_id=? AND guid=?", args);
+                }
+                return;
+              }
+              tx.executeSql("INSERT INTO items (title, description, full_text, updated, author, domain, link, feed_id, \
+                guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", args);
             });
-            if (++count == length) {
-              // If this is a multisource feed, domains are interesting.
+          }, function(error) {
+            // error...
+            ++count;
+          }, function() {
+            // If this is a multisource feed, domains are interesting.
+            (++count == length) && self.db.transaction(function(tx) {
               tx.executeSql("UPDATE feeds SET multisource = ? WHERE id = ?", [domainCount > 3 ? 1 : 0, feed.id]);
-              callback();
-            }
+            }, function(){}, callback);
           });
         });
       }
@@ -982,7 +1016,7 @@
     }
     
     // get feeds from the DB and show them in the sources pane
-    function refreshSideBar() {
+    function refreshSideBar(callback) {
       $els.sources.children('.source').remove();
       forEachFeed(function(feed) {
         var $div = $('<div class="source"><img class="icon"/><h1></h1></div>').attr('id', 'feed-'+feed.id);
@@ -990,7 +1024,8 @@
         $div.children('.icon').attr('src', feed.icon);
         $div.data('feedId', feed.id);
         $els.sources.append($div);
-      });
+        if (!self.feedsWithContent[feed.id]) { $div.addClass('ui-state-disabled'); }
+      }, 0, callback);
     };
     
     // update source indicators when the infini-scroll moves between sections
@@ -1136,11 +1171,12 @@
       var $div = $('<div class="article"></div>');
       var $content = $('<div class="content"></div>').html(item.full_text.text).appendTo($div);
       // wrap images over a certain width so they show up like figures, centered and set apart
-      $content.find('img').load(function() {
+      $content.find('img').css('visibility', 'hidden').load(function() {
         var $that = $(this);
         setTimeout(function() {
           if ($that.width() > o.wrapImageWidth) { $that.wrap('<span class="chillax-wrap-image"/>'); }
-        });
+          $that.css('visibility', 'visible');
+        }, 1);
       });
       var $title = createTitle(item);
       $div.prepend($title).appendTo($els.contentFrame);
@@ -1164,9 +1200,11 @@
     function addSocialTabs(item) {
       var numTabs = $els.socialFrame.tabs('length');
       for (var i = 0; i < numTabs; i++) { $els.socialFrame.tabs('remove', 0); }
+      $els.socialFrame.find('.ui-tabs-panel').remove();
+      slideDownSocialFrame();
       
       // First do Hacker News...
-      $.getJSON(o.hnCommentsAPI + encodeURIComponent(item.link) + "&callback=?", function(data) {
+      var hackerNewsCallback = function(data) {
         if (item.id != self.showingItem) { return; } // too late, another item has been clicked
         self.addingTabs = true;
         $.each(data, function(index, val) {
@@ -1185,12 +1223,22 @@
           });
         });
         self.addingTabs = false;
-      });
+      };
+      if (item.link.indexOf(o.hnCommentsURL)===0) {
+        // self/ask HN post
+        hackerNewsCallback([parseInt(item.link.substr(o.hnCommentsURL.length), 10)]);
+      } else {
+        $.getJSON(o.hnCommentsAPI + encodeURIComponent(item.link) + "&callback=?", hackerNewsCallback);
+      }
       
       // Then Reddit.
-      $.getJSON(o.redditCommentsAPI + encodeURIComponent(item.link) + "&jsonp=?", function(data) {
+      var url = item.link.indexOf(o.redditCommentsURL)===0 ? item.link + ".json?" 
+        : o.redditCommentsAPI + encodeURIComponent(item.link) + "&";
+      $.getJSON(url + "jsonp=?", function(data) {
         if (item.id != self.showingItem) { return; } // too late, another item has been clicked
         self.addingTabs = true;
+        data = data[0] ? data[0] : data;
+        if (!data.data || !data.data.children) { return; } // some kind of malformed response, get out
         if (data.data.children.length > 3) {
           data.data.children = data.data.children.sort(function(a, b) {
             return b.data.num_comments - a.data.num_comments;
@@ -1230,11 +1278,14 @@
     
     // if we are unselecting the current tab, slide down the socialFrame.
     function selectSocialTab(event, ui) {
-      if ($(ui.tab).parent().is('.ui-tabs-selected')) {
-        $els.socialFrame.removeClass('open');
-        $els.contentFrame.css('bottom', 0);
-        $els.socialFrame.stop().animate({bottom: (-self.socialHeight - 1)}, 200, 'swing');
-      }
+      if ($(ui.tab).parent().is('.ui-tabs-selected')) { slideDownSocialFrame(); }
+    };
+    
+    // Slide down the socialFrame.
+    function slideDownSocialFrame() {
+      $els.socialFrame.removeClass('open');
+      $els.contentFrame.css('bottom', 0);
+      $els.socialFrame.stop().animate({bottom: (-self.socialHeight - 1)}, 200, 'swing');
     };
     
     /**
@@ -1257,7 +1308,7 @@
         error = '';
       $url.val($.trim($url.val()));
       $homepage.val($.trim($homepage.val()));
-      if (!$homepage.val().match(/^(http|https|feed):\/\//i)) {
+      if ($homepage.val().length && !$homepage.val().match(/^(http|https|feed):\/\//i)) {
         $homepage.val('http://' + $homepage.val());
       }
       if (!$label.val().length) {
@@ -1281,8 +1332,7 @@
           $label.val(''); $homepage.val(''); $url.val('');
           $this.find('[name=use_viewtext][value=1]').attr('checked', true);
           $this.dialog('close');
-          refreshSideBar();
-          $('#feed-'+id).addClass('ui-state-disabled');
+          refreshSideBar(function() { $('#feed-'+id).addClass('ui-state-disabled'); });
           withFeed(id, function(feed) { 
             pullNewItems(feed, function() {
               fetchItems(true);
@@ -1331,7 +1381,7 @@
     }
     function refreshAllFeeds(dontSetTimer) {
       clearTimeout(self.fetchAllTimeout);
-      pullAllFeeds(false, 5 * 1000);
+      pullAllFeeds(false, 15 * 1000);
       if (dontSetTimer !== true) { setRefreshTimer(); }
     }
     
@@ -1344,13 +1394,13 @@
       var clear = window.location.hash.match('clear');
       
       // Get a handle to the Web SQL DB.
-      initializeDatastore(clear, function() {
+      initializeDatastore(clear, function(firstTime) {
         // It worked!
         window.location.hash = '';
         refreshSideBar();
         fetchItems(true);
         if (navigator.onLine !== false) {
-          pullAllFeeds(true, 2 * 1000);
+          pullAllFeeds(false, firstTime ? 2 * 1000 : 15 * 1000);
           setRefreshTimer();
         }
         initUI();

@@ -5,7 +5,7 @@ body {
 .active {
   border-top-color: #1292DB !important;
   border-bottom-color: #007AD2 !important;
-  background: rgb(98,167,231);
+  background: rgb(57,115,214);
   background: -webkit-gradient(
     linear,
     left bottom,
@@ -15,7 +15,7 @@ body {
   );
 }
 
-#sources {
+#chillax-sources {
   z-index: 2;
   position: fixed;
   left: 0;
@@ -60,13 +60,13 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-#source-buttons {
+#chillax-source-buttons {
   position: absolute;
   bottom: 6px;
   font-size: 70%;
   left: 6px;
 }
-#source-buttons button:not(:first-child) {
+#chillax-source-buttons button:not(:first-child) {
   border-left-width: 0;
 }
 
@@ -193,7 +193,7 @@ body {
   color: white;
 }
 
-#content {
+#chillax-content {
   z-index: 3;
   position: fixed;
   left: 400px;
@@ -205,7 +205,7 @@ body {
   -webkit-box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.8);
   box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.8);
 }
-#content-frame {
+#chillax-content-frame {
   z-index: 1;
   position: absolute;
   top: 0;
@@ -214,15 +214,15 @@ body {
   bottom: 0;
   overflow: auto;
 }
-#content-frame.iframed {
+#chillax-content-frame.iframed {
   overflow: hidden;
 }
-#content-full {
+#chillax-content-full {
   width: 100%;
   height: 100%;
 }
 
-#social-frame {
+#chillax-social-frame {
   font-size: 70%;
   z-index: 2;
   position: absolute;
@@ -236,7 +236,7 @@ body {
   border-bottom: none;
   -webkit-box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.792969);
 }
-#social-buttons {
+#chillax-social-buttons {
   position: absolute;
   top: -31px;
   left: 0;
@@ -247,17 +247,17 @@ body {
   height: 29px;
   overflow: hidden;
 }
-#social-buttons li {
+#chillax-social-buttons li {
   float: right;
 }
-#social-buttons li a {
+#chillax-social-buttons li a {
   padding: 5px 11px;
   height: 16px;
 }
-#social-buttons li.loading {
+#chillax-social-buttons li.loading {
   opacity: 0.6;
 }
-#social-buttons .hn-icon {
+#chillax-social-buttons .hn-icon {
   display: block;
   float: left;
   width: 16px;
@@ -265,7 +265,7 @@ body {
   margin: 0px 6px 0px -2px;
   background: url(http://getfavicon.appspot.com/http://news.ycombinator.com) no-repeat;
 }
-#social-buttons .reddit-icon {
+#chillax-social-buttons .reddit-icon {
   display: block;
   float: left;
   width: 16px;
@@ -273,11 +273,11 @@ body {
   margin: 0px 6px 0px -2px;
   background: url(../images/reddit_icon.gif) no-repeat;
 }
-#social-frame .ui-tabs-panel {
+#chillax-social-frame .ui-tabs-panel {
   padding: 0;
   height: 100%;
 }
-#social-frame iframe {
+#chillax-social-frame iframe {
   width: 100%;
   height: 100%;
 }
@@ -295,7 +295,7 @@ body {
 /**
  * Styles for the RSS plaintext content
  */
-#content-frame a.title {
+#chillax-content-frame a.title {
   font-family: 'Helvetica Neue',Arial,Helvetica,sans-serif;
   color: #222222;
   text-decoration: none;
@@ -304,23 +304,23 @@ body {
   padding: 10px 15px;
   border-bottom: 1px solid #D5D5D5;
 }
-#content-frame a.title:hover {
+#chillax-content-frame a.title:hover {
   background: #F4F6FA;
 }
-#content-frame .title .updated, #content-frame .title .author {
+#chillax-content-frame .title .updated, #content-frame .title .author {
   font-size: 0.8em;
   color: #777777;
 }
-#content-frame .title .author {
+#chillax-content-frame .title .author {
   padding-top: 0.5em;
 }
-#content-frame .title h1 {
+#chillax-content-frame .title h1 {
   color: #222222;
   font-size: 1.7em;
   line-height: 1.2em;
   margin: 0;
 }
-#content-frame .article {
+#chillax-content-frame .article {
   color:#222222;
   font:1em/1.5 'Palatino Linotype', 'Book Antiqua',Georgia,serif,'Times New Roman';
   line-height:1.4em;
@@ -328,39 +328,39 @@ body {
   max-width: 700px;
   padding: 0 20px 80px;
 } 
-#content-frame .content a:link {
+#chillax-content-frame .content a:link {
     color: #145090;
 }
-#content-frame .content a:hover {
+#chillax-content-frame .content a:hover {
   background: #F4F6FA;
 }
-#content-frame .content a:visited {
+#chillax-content-frame .content a:visited {
   color: #808B96;
 }
-#content-frame .content img {
+#chillax-content-frame .content img {
   border: 0px;
   max-width: 700px;
 }
-#content-frame .content a, code, pre, span {
+#chillax-content-frame .content a, code, pre, span {
   word-wrap: break-word;
 }
-#content-frame .content pre, #content-frame code {
+#chillax-content-frame .content pre, #content-frame code {
   font-family: 'bitstream vera sans mono', 'andale mono', 'lucida console', monospace;
   font-size: 80%;
 }
 
-#content-frame .content hr {
+#chillax-content-frame .content hr {
   margin: auto -20px;
   opacity: 0.5;
 }
-#content-frame .content .pagechange {
+#chillax-content-frame .content .pagechange {
   font-family: 'Helvetica Neue',Arial,Helvetica,sans-serif;
   font-size: 0.8em;
   color: #777777;
   text-align: right;
   text-transform: uppercase;
 }
-#content-frame .content .chillax-wrap-image {
+#chillax-content-frame .content .chillax-wrap-image {
   display: block;
   text-align: center;
 }

@@ -3,3 +3,6 @@ AddType text/cache-manifest .manifest
 # Try to get web browsers to always request files when online.
 ExpiresActive On
 ExpiresDefault "access"
+
+RewriteEngine on
+RewriteRule ^cache\.manifest$ cache.manifest.php [L]
