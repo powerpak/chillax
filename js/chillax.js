@@ -890,9 +890,7 @@
       }
       
       if (feed.use_viewtext) {
-        $.getJSON(o.viewTextAPI + encodeURIComponent(feed.f_link) + "&callback=?", function (data) {
-          insertItems(data.content);
-        });
+        $.get(o.rssProxy + encodeURIComponent(o.viewTextAPI + encodeURIComponent(feed.f_link)), insertItems);
       } else {
         $.get(o.rssProxy + encodeURIComponent(feed.f_link), insertItems);
       }
