@@ -70,13 +70,11 @@ Highlights of the CSS files: Since I'm pretty much solely targeting Chrome/Safar
 
 ## Future directions
 
-There were a number of things I did not get to complete for lack of time, but really wanted and theorized about in my proposal:
+Some features that I am thinking about implementing at some point:
 
 - tracking eye-view time for items, and deprioritizing items that have been passed over.  Kind of how some RSS readers can auto-mark as read after you've passed an item, but smarter.
 - better entry of new feeds, I really wanted a smart search engine where you can just type in "wall street journal" and it presents a bunch of feeds you can pick from.  Blindly entering in URLs to XML files is no fun, and lots of current readers (and now mine too) totally forget how annoying this is.
 - ability to sort the sources on the left, using $.ui.sortable this would be a snap
 - visibility range slider, so you can go back in time if you want to
 - some way to see only articles you've clicked
-- search.  SEARCH!  argh.
-
-Well, I did hit most of my points, I think.  I think the point here is that the more you work on a software project, the more you realize how much can be improved, and how hard it is to get those things right.
+- search.  SEARCH!
