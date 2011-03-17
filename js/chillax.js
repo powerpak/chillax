@@ -846,7 +846,7 @@
     // For the given feed, fetch the RSS, parse it, and insert item entries in the DB
     // Fire callback after this is complete
     function pullNewItems(feed, callback) {
-        
+
       function insertItems(data) {
         var feedData = new $.JFeed(data);
         self.db.transaction(function (tx) {
@@ -879,6 +879,11 @@
             });
           }, function(error) {
             // error...
+            if (error.code==error.QUOTA_ERR) {
+              // quota exceeded, cleaning up some old items, try again
+              console.log('quota exceeded, cleaning up %d items', feedData.items.length * 5);
+              removeOldItems(feedData.items.length * 5, function() { insertItems(data); });
+            }
             ++count;
           }, function() {
             // If this is a multisource feed, domains are interesting.
@@ -929,7 +934,8 @@
         tx.executeSql('SELECT seq FROM feeds ORDER BY seq DESC LIMIT 1', [], function(tx, result) {
           var seq = result.rows.length ? result.rows.item(0).seq : 0;
           tx.executeSql('INSERT INTO feeds (label, f_link, homepage, icon, seq, use_viewtext) VALUES (?, ?, ?, ?, ?, ?)', 
-            [feedSpec.label, feedSpec.link, feedSpec.homepage, icon, ++seq, feedSpec.use_viewtext], function(tx, result) {
+            [feedSpec.label, feedSpec.link, feedSpec.homepage, icon, ++seq, feedSpec.use_viewtext], 
+          function(tx, result) {
             $.isFunction(callback) && callback(result);
           });
         });
@@ -943,6 +949,22 @@
         tx.executeSql('DELETE FROM feeds WHERE id = ?', [feedId], function(tx, result) {
           $.isFunction(callback) && callback(result);
         });
+      });
+    }
+    
+    // delete old news items
+    function removeOldItems(num, callback) {
+      var num = num || 100;
+      self.db.transaction(function (tx) {
+        tx.executeSql('SELECT updated FROM items ORDER BY updated ASC LIMIT ?,1', [num], function(tx, result) {
+          if (result.rows.length) {
+            tx.executeSql('DELETE FROM items WHERE updated < ?', [result.rows.item(0).updated]);
+          }
+        });
+      }, function(error) {
+        
+      }, function() {
+        $.isFunction(callback) && callback();
       });
     }
     
