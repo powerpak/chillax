@@ -18,7 +18,7 @@ At this point, the middle column is your browsing territory.  Scroll up and down
 
 Each article shows its headline, and some opening text right below.  If the current source presents links from many sites, e.g. the "news.yc >20" feed or the "reddit.com" feed, you'll also see a domain name in the right-hand corner that tells you where the content is from.  With any luck some article will catch your eye and you'll want to read more.
 
-Now here comes the hard part: click on the item.  It should now show up in the large right-hand column.  If this was a fairly typical kind of "web content", e.g., an article or a picture, you should see a beautifully rendered version of the article's contents without any of the typical website accoutrements.  If you want to see the full version of the article as it is (and this should be fairly rare, for the instances where viewtext.org wasn't able to extract content) click on the title of the article in the right column, and it will open in a new browser tab.
+Click on any item you wish to read.  It should now show up in the large right-hand column.  If this was a fairly typical kind of "web content", e.g., an article or a picture, you should see a beautifully rendered version of the article's contents without any of the typical website accoutrements.  If you want to see the full version of the article as it is (and this should be fairly rare, for the instances where viewtext.org wasn't able to extract content) click on the title of the article in the right column, and it will open in a new browser tab.
 
 ### Social news site integration
 
