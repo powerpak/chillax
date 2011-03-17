@@ -12,7 +12,6 @@ if (!isset($_GET['url']) || !preg_match('#^https?://#', $_GET['url'])) {
 }
 
 $ch = curl_init($_GET['url']);
-$fp = fopen("example_homepage.txt", "w");
 
 $header = '';
 

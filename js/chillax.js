@@ -648,8 +648,8 @@
       // open articles in an iframe, not a new tab
       openFullArticlesInline: false,
       // URLs for APIs and social websites that will be used
-      rssProxy: 'http://chillaxapp.com/proxy.php?url=',
-      defaultFavicon: 'http://chillaxapp.com/images/rss.png',
+      rssProxy: 'proxy.php?url=',
+      defaultFavicon: 'images/rss.png',
       faviconAPI: 'http://getfavicon.appspot.com/',
       viewTextAPI: 'http://viewtext.org/api/text?rl=false&url=',
       hnCommentsAPI: 'http://api.ihackernews.com/getid?format=jsonp&url=',
